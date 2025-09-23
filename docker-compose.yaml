@@ -1,0 +1,38 @@
+version: "3.3"
+
+services:
+  db:
+    image: postgres:17
+    container_name: postgres-db
+    environment:
+      POSTGRES_PASSWORD: password123
+      POSTGRES_USER: user123
+      POSTGRES_DB: db123
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - app-network
+
+  app:
+    build: .
+    container_name: node-app
+    environment:
+      DB_HOST: db-postgres
+      DB_USER: user123
+      DB_PASSWORD: password123
+      DB_NAME: db123
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+    networks:
+      - app-network
+
+volumes:
+  pgdata:
+
+networks:
+  app-network:

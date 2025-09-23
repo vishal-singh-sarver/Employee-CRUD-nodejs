@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Employees</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 20px auto;
+      padding: 10px;
+      background: #f4f4f9;
+      color: #333;
+    }
+
+    h1 {
+      color: #1a73e8;
+      text-align: center;
+    }
+
+    h2 {
+      color: #1a73e8;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 5px;
+    }
+
+    input {
+      margin: 5px;
+      padding: 5px;
+      width: 200px;
+    }
+
+    button {
+      margin: 5px;
+      padding: 5px 10px;
+      background: #1a73e8;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 3px;
+    }
+
+    button:hover {
+      background: #155ab6;
+    }
+
+    ul {
+      list-style-type: none;
+      padding-left: 0;
+    }
+
+    li {
+      margin: 5px 0;
+      padding: 5px;
+      background: #e1e7f5;
+      border-radius: 3px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    li button {
+      background: #d9534f;
+    }
+
+    li button:hover {
+      background: #c12e2a;
+    }
+  </style>
+</head>
+<body>
+  <h1>EMPLOYEE</h1>
+
+  <h2>Add / Update</h2>
+  <input id="name" placeholder="Employee Name">
+  <input id="address" placeholder="Address">
+  <button onclick="addSchool()">Add</button>
+  <h2>Employees List</h2>
+  <ul id="schools"></ul>
+
+  <script>
+    async function loadSchools() {
+      try {
+        const res = await fetch('/schools')
+        const data = await res.json()
+        const list = document.getElementById('schools')
+        list.innerHTML = ''
+        data.forEach(s => {
+          const li = document.createElement('li')
+          li.textContent = `${s.id}. ${s.name} ---- ${s.address}`
+          const delBtn = document.createElement('button')
+          delBtn.textContent = 'Delete'
+          delBtn.onclick = () => deleteSchool(s.id)
+          li.appendChild(delBtn)
+          list.appendChild(li)
+          const updBtn = document.createElement('button')
+          updBtn.textContent = 'Update'
+          updBtn.onclick = () => updateSchool(s.id)
+          li.appendChild(updBtn)
+          list.appendChild(li)
+        })
+      } catch (err) {
+        console.error(err)
+      }
+    }
+
+    async function addSchool() {
+      const name = document.getElementById('name').value
+      const address = document.getElementById('address').value
+      await fetch('/schools', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, address })
+      })
+      loadSchools()
+    }
+
+    async function updateSchool(id) {
+      const name = document.getElementById('name').value
+      const address = document.getElementById('address').value
+      await fetch(`/schools/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, address })
+      })
+      loadSchools()
+    }
+
+    async function deleteSchool(id) {
+      await fetch(`/schools/${id}`, { method: 'DELETE' })
+      loadSchools()
+    }
+
+    // Auto-load list
+    window.onload = loadSchools
+  </script>
+</body>
+</html>
