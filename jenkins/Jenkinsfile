@@ -1,0 +1,50 @@
+pipeline {
+    agent any
+
+    environment {
+        DOCKER_HUB_CREDENTIALS = 'Docker' // Jenkins credentials ID
+        IMAGE_NAME = 'vishalsinghsarver/employee-crud-nodejs'
+        TAG = "${env.BUILD_NUMBER}"
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main',credentialsId: 'git-vishalsarver', url: 'https://github.com/vishal-singh-sarver/Employee-CRUD-nodejs.git'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    dir('backend') {
+                        sh "docker build -t ${IMAGE_NAME}:${TAG} ."
+                    }
+                }
+            }
+        }
+
+        stage('Login to Docker Hub') {
+            steps {
+                script {
+                    withCredentials([usernamePassword(credentialsId: "${DOCKER_HUB_CREDENTIALS}", passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
+                        sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
+                    }
+                }
+            }
+        }
+        
+        stage('Verify Docker Login') {
+            steps {
+                sh 'docker info | grep Username || echo "⚠️ Not logged in"'
+            }
+        }
+
+        stage('Push Image to Docker Hub') {
+            steps {
+                sh "docker tag ${IMAGE_NAME}:${TAG} ${IMAGE_NAME}:latest"
+                sh "docker push ${IMAGE_NAME}:latest"
+            }
+        }
+    }
+}
